@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2012 Tasharen Entertainment
+// Copyright © 2011-2013 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -180,6 +180,8 @@ public class UIPopupList : MonoBehaviour
 					eventReceiver.SendMessage(functionName, mSelectedItem, SendMessageOptions.DontRequireReceiver);
 				}
 				current = null;
+
+				if (textLabel == null) mSelectedItem = null;
 			}
 		}
 	}
@@ -208,16 +210,19 @@ public class UIPopupList : MonoBehaviour
 
 	void Start ()
 	{
-		// Automatically choose the first item
-		if (string.IsNullOrEmpty(mSelectedItem))
+		if (textLabel != null)
 		{
-			if (items.Count > 0) selection = items[0];
-		}
-		else
-		{
-			string s = mSelectedItem;
-			mSelectedItem = null;
-			selection = s;
+			// Automatically choose the first item
+			if (string.IsNullOrEmpty(mSelectedItem))
+			{
+				if (items.Count > 0) selection = items[0];
+			}
+			else
+			{
+				string s = mSelectedItem;
+				mSelectedItem = null;
+				selection = s;
+			}
 		}
 	}
 
@@ -247,7 +252,9 @@ public class UIPopupList : MonoBehaviour
 
 			mHighlightedLabel = lbl;
 
-			UIAtlas.Sprite sp = mHighlight.sprite;
+			UIAtlas.Sprite sp = mHighlight.GetAtlasSprite();
+			if (sp == null) return;
+
 			float offsetX = sp.inner.xMin - sp.outer.xMin;
 			float offsetY = sp.inner.yMin - sp.outer.yMin;
 
@@ -481,7 +488,9 @@ public class UIPopupList : MonoBehaviour
 			mHighlight.pivot = UIWidget.Pivot.TopLeft;
 			mHighlight.color = highlightColor;
 
-			UIAtlas.Sprite hlsp = mHighlight.sprite;
+			UIAtlas.Sprite hlsp = mHighlight.GetAtlasSprite();
+			if (hlsp == null) return;
+
 			float hlspHeight = hlsp.inner.yMin - hlsp.outer.yMin;
 			float fontScale = font.size * font.pixelSize * textScale;
 			float x = 0f, y = -padding.y;

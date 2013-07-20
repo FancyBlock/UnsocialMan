@@ -1,6 +1,6 @@
-﻿//----------------------------------------------
+//----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2012 Tasharen Entertainment
+// Copyright © 2011-2013 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -21,13 +21,21 @@ public class UIButtonScale : MonoBehaviour
 	bool mStarted = false;
 	bool mHighlighted = false;
 
-	void Start () { Init(); mStarted = true; }
+	void Start ()
+	{
+		if (!mStarted)
+		{
+			mStarted = true;
+			if (tweenTarget == null) tweenTarget = transform;
+			mScale = tweenTarget.localScale;
+		}
+	}
 
 	void OnEnable () { if (mStarted && mHighlighted) OnHover(UICamera.IsHighlighted(gameObject)); }
 
 	void OnDisable ()
 	{
-		if (tweenTarget != null)
+		if (mStarted && tweenTarget != null)
 		{
 			TweenScale tc = tweenTarget.GetComponent<TweenScale>();
 
@@ -39,16 +47,11 @@ public class UIButtonScale : MonoBehaviour
 		}
 	}
 
-	void Init ()
-	{
-		if (tweenTarget == null) tweenTarget = transform;
-		mScale = tweenTarget.localScale;
-	}
-
 	void OnPress (bool isPressed)
 	{
 		if (enabled)
 		{
+			if (!mStarted) Start();
 			TweenScale.Begin(tweenTarget.gameObject, duration, isPressed ? Vector3.Scale(mScale, pressed) :
 				(UICamera.IsHighlighted(gameObject) ? Vector3.Scale(mScale, hover) : mScale)).method = UITweener.Method.EaseInOut;
 		}
@@ -58,6 +61,7 @@ public class UIButtonScale : MonoBehaviour
 	{
 		if (enabled)
 		{
+			if (!mStarted) Start();
 			TweenScale.Begin(tweenTarget.gameObject, duration, isOver ? Vector3.Scale(mScale, hover) : mScale).method = UITweener.Method.EaseInOut;
 			mHighlighted = isOver;
 		}

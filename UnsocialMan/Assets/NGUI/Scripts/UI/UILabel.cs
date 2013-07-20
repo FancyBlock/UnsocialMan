@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2012 Tasharen Entertainment
+// Copyright © 2011-2013 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -29,6 +29,7 @@ public class UILabel : UIWidget
 	[HideInInspector][SerializeField] Color mEffectColor = Color.black;
 	[HideInInspector][SerializeField] UIFont.SymbolStyle mSymbols = UIFont.SymbolStyle.Uncolored;
 	[HideInInspector][SerializeField] Vector2 mEffectDistance = Vector2.one;
+	[HideInInspector][SerializeField] bool mShrinkToFit = false;
 
 	/// <summary>
 	/// Obsolete, do not use. Use 'mMaxLineWidth' instead.
@@ -353,6 +354,26 @@ public class UILabel : UIWidget
 	}
 
 	/// <summary>
+	/// Whether the label will automatically shrink its size in order to fit the maximum line width.
+	/// </summary>
+
+	public bool shrinkToFit
+	{
+		get
+		{
+			return mShrinkToFit;
+		}
+		set
+		{
+			if (mShrinkToFit != value)
+			{
+				mShrinkToFit = value;
+				if (mMaxLineWidth > 0f) hasChanged = true;
+			}
+		}
+	}
+
+	/// <summary>
 	/// Returns the processed version of 'text', with new line characters, line wrapping, etc.
 	/// </summary>
 
@@ -427,6 +448,18 @@ public class UILabel : UIWidget
 		mPremultiply = (font != null && font.material != null && font.material.shader.name.Contains("Premultiplied"));
 	}
 
+#if UNITY_EDITOR
+	public override bool OnUpdate ()
+	{
+		if (mFont.isDynamic && !Application.isPlaying && mFont.RecalculateDynamicOffset())
+		{
+			mFont.MarkAsDirty();
+			return true;
+		}
+		return false;
+	}
+#endif
+
 	/// <summary>
 	/// UILabel needs additional processing when something changes.
 	/// </summary>
@@ -446,7 +479,7 @@ public class UILabel : UIWidget
 		mChanged = true;
 		hasChanged = false;
 		mLastText = mText;
-		mProcessedText = mText.Replace("\\n", "\n");
+		mProcessedText = mText;
 
 		if (mPassword)
 		{
@@ -464,18 +497,41 @@ public class UILabel : UIWidget
 			mProcessedText = mFont.WrapText(hidden, mMaxLineWidth / cachedTransform.localScale.x,
 				mMaxLineCount, false, UIFont.SymbolStyle.None);
 		}
-		else if (mMaxLineWidth > 0)
+		else if (!mShrinkToFit)
 		{
-			mProcessedText = mFont.WrapText(mProcessedText, mMaxLineWidth / cachedTransform.localScale.x, mMaxLineCount, mEncoding, mSymbols);
-		}
-		else if (mMaxLineCount > 0)
-		{
-			mProcessedText = mFont.WrapText(mProcessedText, 100000f, mMaxLineCount, mEncoding, mSymbols);
+			if (mMaxLineWidth > 0)
+			{
+				mProcessedText = mFont.WrapText(mProcessedText, mMaxLineWidth / cachedTransform.localScale.x, mMaxLineCount, mEncoding, mSymbols);
+			}
+			else if (mMaxLineCount > 0)
+			{
+				mProcessedText = mFont.WrapText(mProcessedText, 100000f, mMaxLineCount, mEncoding, mSymbols);
+			}
 		}
 
+		float scale = Mathf.Abs(cachedTransform.localScale.x);
 		mSize = !string.IsNullOrEmpty(mProcessedText) ? mFont.CalculatePrintedSize(mProcessedText, mEncoding, mSymbols) : Vector2.one;
-		float scale = cachedTransform.localScale.x;
-		mSize.x = Mathf.Max(mSize.x, (mFont != null && scale > 1f) ? lineWidth / scale : 1f);
+
+		if (mShrinkToFit && mMaxLineWidth > 0)
+		{
+			// We want to shrink the label (when it doesn't fit)
+			if (scale > 0f)
+			{
+				float maxSize = (float)mMaxLineWidth / mFont.size;
+				scale = (mSize.x > maxSize) ? (maxSize / mSize.x) * mFont.size : mFont.size;
+				cachedTransform.localScale = new Vector3(scale, scale, 1f);
+			}
+			else
+			{
+				mSize.x = 1f;
+				cachedTransform.localScale = new Vector3(mFont.size, mFont.size, 1f);
+			}
+		}
+		else
+		{
+			mSize.x = Mathf.Max(mSize.x, (scale > 0f) ? lineWidth / scale : 1f);
+		}
+
 		mSize.y = Mathf.Max(mSize.y, 1f);
 	}
 
@@ -540,7 +596,7 @@ public class UILabel : UIWidget
 			if (cachedTransform.localRotation == Quaternion.identity)
 			{
 				if ((x % 2 == 1) && (pivot == Pivot.Top || pivot == Pivot.Center || pivot == Pivot.Bottom)) pos.x += 0.5f;
-				if ((y % 2 == 1) && (pivot == Pivot.Left || pivot == Pivot.Center || pivot == Pivot.Right)) pos.y -= 0.5f;
+				if ((y % 2 == 1) && (pivot == Pivot.Left || pivot == Pivot.Center || pivot == Pivot.Right)) pos.y += 0.5f;
 			}
 
 			pos.x *= pixelSize;
@@ -556,19 +612,11 @@ public class UILabel : UIWidget
 	/// Apply a shadow effect to the buffer.
 	/// </summary>
 
-#if UNITY_3_5_4
-	void ApplyShadow (BetterList<Vector3> verts, BetterList<Vector2> uvs, BetterList<Color> cols, int start, int end, float x, float y)
-#else
 	void ApplyShadow (BetterList<Vector3> verts, BetterList<Vector2> uvs, BetterList<Color32> cols, int start, int end, float x, float y)
-#endif
 	{
 		Color c = mEffectColor;
 		c.a *= alpha * mPanel.alpha;
-#if UNITY_3_5_4
-		Color col = (font.premultipliedAlpha) ? NGUITools.ApplyPMA(c) : c;
-#else
 		Color32 col = (font.premultipliedAlpha) ? NGUITools.ApplyPMA(c) : c;
-#endif
 
 		for (int i = start; i < end; ++i)
 		{
@@ -588,11 +636,7 @@ public class UILabel : UIWidget
 	/// Draw the label.
 	/// </summary>
 
-#if UNITY_3_5_4
-	public override void OnFill (BetterList<Vector3> verts, BetterList<Vector2> uvs, BetterList<Color> cols)
-#else
 	public override void OnFill (BetterList<Vector3> verts, BetterList<Vector2> uvs, BetterList<Color32> cols)
-#endif
 	{
 		if (mFont == null) return;
 		MakePositionPerfect();

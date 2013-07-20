@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2012 Tasharen Entertainment
+// Copyright © 2011-2013 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEditor;
@@ -412,7 +412,13 @@ public class NGUIEditorTools
 	/// Helper function that returns the selected root object.
 	/// </summary>
 
-	static public GameObject SelectedRoot ()
+	static public GameObject SelectedRoot () { return SelectedRoot(false); }
+
+	/// <summary>
+	/// Helper function that returns the selected root object.
+	/// </summary>
+
+	static public GameObject SelectedRoot (bool createIfMissing)
 	{
 		GameObject go = Selection.activeGameObject;
 
@@ -425,7 +431,7 @@ public class NGUIEditorTools
 		// No selection? Try to find the root automatically
 		if (p == null)
 		{
-			UIPanel[] panels = GameObject.FindSceneObjectsOfType(typeof(UIPanel)) as UIPanel[];
+			UIPanel[] panels = NGUITools.FindActive<UIPanel>();
 			if (panels.Length > 0) go = panels[0].gameObject;
 		}
 
@@ -442,6 +448,19 @@ public class NGUIEditorTools
 				if (t == null) return (p != null) ? p.gameObject : null;
 				else go = t.gameObject;
 			}
+		}
+
+		if (createIfMissing && go == null)
+		{
+			// No object specified -- find the first panel
+			if (go == null)
+			{
+				UIPanel panel = GameObject.FindObjectOfType(typeof(UIPanel)) as UIPanel;
+				if (panel != null) go = panel.gameObject;
+			}
+
+			// No UI present -- create a new one
+			if (go == null) go = UICreateNewUIWizard.CreateNewUI();
 		}
 		return go;
 	}
@@ -502,7 +521,7 @@ public class NGUIEditorTools
 			settings.npotScale = TextureImporterNPOTScale.None;
 
 			ti.SetTextureSettings(settings);
-			AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+			AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 		}
 		return true;
 	}
@@ -536,7 +555,7 @@ public class NGUIEditorTools
 			settings.npotScale = TextureImporterNPOTScale.ToNearest;
 
 			ti.SetTextureSettings(settings);
-			AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+			AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 		}
 		return true;
 	}
@@ -551,7 +570,11 @@ public class NGUIEditorTools
 		{
 			if (forInput) { if (!MakeTextureReadable(path, force)) return null; }
 			else if (!MakeTextureAnAtlas(path, force)) return null;
-			return AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
+			//return AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
+
+			Texture2D tex = AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
+			AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+			return tex;
 		}
 		return null;
 	}
@@ -692,7 +715,6 @@ public class NGUIEditorTools
 
 	/// <summary>
 	/// Create an undo point for the specified objects.
-	/// This action also marks the object as dirty so prefabs work correctly in 3.5.0 (work-around for a bug in Unity).
 	/// </summary>
 
 	static public void RegisterUndo (string name, params Object[] objects)
@@ -888,6 +910,23 @@ public class NGUIEditorTools
 	}
 
 	/// <summary>
+	/// Draw a simple sprite selection button.
+	/// </summary>
+
+	static public bool SimpleSpriteField (UIAtlas atlas, string spriteName, SpriteSelector.Callback callback, params GUILayoutOption[] options)
+	{
+		if (atlas.GetSprite(spriteName) == null)
+			spriteName = "";
+
+		if (GUILayout.Button(spriteName, "DropDown", options))
+		{
+			SpriteSelector.Show(atlas, spriteName, callback);
+			return true;
+		}
+		return false;
+	}
+
+	/// <summary>
 	/// Convenience function that displays a list of sprites and returns the selected value.
 	/// </summary>
 
@@ -927,10 +966,12 @@ public class NGUIEditorTools
 			}
 			else
 			{
-				string[] list = new string[] { spriteName, "...Edit" };
-				int selection = EditorGUILayout.Popup(0, list, "DropDownButton");
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(spriteName, "HelpBox", GUILayout.Height(18f));
+				GUILayout.Space(18f);
+				GUILayout.EndHorizontal();
 
-				if (selection == 1)
+				if (GUILayout.Button("Edit", GUILayout.Width(40f)))
 				{
 					EditorPrefs.SetString("NGUI Selected Sprite", spriteName);
 					Select(atlas.gameObject);
@@ -968,4 +1009,143 @@ public class NGUIEditorTools
 	/// </summary>
 
 	static public GameObject previousSelection { get { return mPrevious; } }
+
+	/// <summary>
+	/// Helper function that checks to see if the scale is uniform.
+	/// </summary>
+
+	static public bool IsUniform (Vector3 scale)
+	{
+		return Mathf.Approximately(scale.x, scale.y) && Mathf.Approximately(scale.x, scale.z);
+	}
+
+	/// <summary>
+	/// Check to see if the specified game object has a uniform scale.
+	/// </summary>
+
+	static public bool IsUniform (GameObject go)
+	{
+		if (go == null) return true;
+
+		if (go.GetComponent<UIWidget>() != null)
+		{
+			Transform parent = go.transform.parent;
+			return parent == null || IsUniform(parent.gameObject);
+		}
+		return IsUniform(go.transform.lossyScale);
+	}
+
+	/// <summary>
+	/// Fix uniform scaling of the specified object.
+	/// </summary>
+
+	static public void FixUniform (GameObject go)
+	{
+		Transform t = go.transform;
+
+		while (t != null && t.gameObject.GetComponent<UIRoot>() == null)
+		{
+			if (!NGUIEditorTools.IsUniform(t.localScale))
+			{
+				Undo.RegisterUndo(t, "Uniform scaling fix");
+				t.localScale = Vector3.one;
+				EditorUtility.SetDirty(t);
+			}
+			t = t.parent;
+		}
+	}
+
+	/// <summary>
+	/// Raycast into the specified panel, returning a list of widgets.
+	/// </summary>
+
+	static public UIWidget[] Raycast (UIPanel panel, Vector2 mousePos)
+	{
+		List<UIWidget> list = new List<UIWidget>();
+		UIWidget[] widgets = panel.gameObject.GetComponentsInChildren<UIWidget>();
+
+		for (int i = 0; i < widgets.Length; ++i)
+		{
+			UIWidget w = widgets[i];
+
+			if (w.panel == panel)
+			{
+				Vector3[] corners = NGUIMath.CalculateWidgetCorners(w);
+				if (DistanceToRectangle(corners, mousePos) == 0f)
+					list.Add(w);
+			}
+		}
+
+		list.Sort(delegate(UIWidget w1, UIWidget w2) { return w2.depth.CompareTo(w1.depth); });
+		return list.ToArray();
+	}
+
+	/// <summary>
+	/// Determine the distance from the specified point to the line segment.
+	/// </summary>
+
+	static float DistancePointToLineSegment (Vector2 point, Vector2 a, Vector2 b)
+	{
+		float l2 = (b - a).sqrMagnitude;
+		if (l2 == 0f) return (point - a).magnitude;
+		float t = Vector2.Dot(point - a, b - a) / l2;
+		if (t < 0f) return (point - a).magnitude;
+		else if (t > 1f) return (point - b).magnitude;
+		Vector2 projection = a + t * (b - a);
+		return (point - projection).magnitude;
+	}
+
+	/// <summary>
+	/// Determine the distance from the mouse position to the world rectangle specified by the 4 points.
+	/// </summary>
+
+	static public float DistanceToRectangle (Vector3[] worldPoints, Vector2 mousePos)
+	{
+		Vector2[] screenPoints = new Vector2[4];
+		for (int i = 0; i < 4; ++i)
+			screenPoints[i] = HandleUtility.WorldToGUIPoint(worldPoints[i]);
+		return DistanceToRectangle(screenPoints, mousePos);
+	}
+
+	/// <summary>
+	/// Determine the distance from the mouse position to the screen space rectangle specified by the 4 points.
+	/// </summary>
+
+	static public float DistanceToRectangle (Vector2[] screenPoints, Vector2 mousePos)
+	{
+		bool oddNodes = false;
+		int j = 4;
+
+		for (int i = 0; i < 5; i++)
+		{
+			Vector3 v0 = screenPoints[NGUIMath.RepeatIndex(i, 4)];
+			Vector3 v1 = screenPoints[NGUIMath.RepeatIndex(j, 4)];
+
+			if ((v0.y > mousePos.y) != (v1.y > mousePos.y))
+			{
+				if (mousePos.x < (v1.x - v0.x) * (mousePos.y - v0.y) / (v1.y - v0.y) + v0.x)
+				{
+					oddNodes = !oddNodes;
+				}
+			}
+			j = i;
+		}
+
+		if (!oddNodes)
+		{
+			float dist, closestDist = -1f;
+
+			for (int i = 0; i < 4; i++)
+			{
+				Vector3 v0 = screenPoints[i];
+				Vector3 v1 = screenPoints[NGUIMath.RepeatIndex(i + 1, 4)];
+
+				dist = DistancePointToLineSegment(mousePos, v0, v1);
+
+				if (dist < closestDist || closestDist < 0f) closestDist = dist;
+			}
+			return closestDist;
+		}
+		else return 0f;
+	}
 }
