@@ -284,12 +284,12 @@ public class Judger : MonoBehaviour
 		if( correctCnt >= CommonConstant.WIN_MAN_CNT )
 		{
 			// win
-			//TODO 
+			Application.LoadLevel( "Win" );
 		}
 		else
 		{
 			// fail
-			//TODO 
+			Application.LoadLevel( "Lose" );
 		}
 	}
 	
