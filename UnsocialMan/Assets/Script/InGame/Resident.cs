@@ -56,6 +56,8 @@ public class Resident : MonoBehaviour
 		man.m_judger = m_judger;
 		man.StartDrag();
 		
+		m_judger.m_curWindow = gameObject;
+		
 		m_state = STATE_DRAG;
 	}
 	
@@ -66,6 +68,8 @@ public class Resident : MonoBehaviour
 		{
 			return;
 		}
+		
+		m_judger.m_curWindow = null;
 		
 		Vector3 mousePos = m_camera.ScreenToWorldPoint( Input.mousePosition );
 		Vector3 windowPos = gameObject.transform.position;
@@ -104,6 +108,17 @@ public class Resident : MonoBehaviour
 		Destroy( m_dragedManObj );
 		
 		m_state = STATE_IDLE;
+	}
+	
+	// force release the man
+	public void ForceRelease()
+	{
+		m_judger.m_curWindow = null;
+		
+		m_dragedManObj.SendMessage( "StopDrag" );
+			
+		judgeResult();
+		m_state = STATE_EMPTY;
 	}
 	
 	

@@ -6,6 +6,7 @@ public class DropedMan : MonoBehaviour
 	//---------------- public properties ----------------
 	
 	public Judger m_judger;
+	public GameObject m_bloodMockup;
 	
 	//---------------- public functions ------------------
 
@@ -19,12 +20,23 @@ public class DropedMan : MonoBehaviour
 	{
 		gameObject.transform.Translate( 0,  CommonConstant.DROP_VELOCITY * Time.deltaTime, 0 );
 		
-		if( gameObject.transform.position.y <= CommonConstant.BOTTOM_LINE )
+		float bottomLine = CommonConstant.BOTTOM_LINE + ( m_judger.CUR_LEVEL_CNT - 1.0f ) * 2.0f;
+		if( gameObject.transform.position.y <=  bottomLine  )
 		{
 			m_judger.EndCurLevel();
 			
 			Destroy( gameObject );
 		}
+	}
+	
+	// kill the man
+	void OnMouseDown()
+	{
+		// kill the drop man
+		GameObject blood = (GameObject)Instantiate( m_bloodMockup, gameObject.transform.position, Quaternion.identity );
+		blood.GetComponent<Blood>().m_judger = m_judger;
+		
+		Destroy( gameObject );
 	}
 	
 }
