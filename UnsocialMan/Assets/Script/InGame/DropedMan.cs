@@ -13,6 +13,8 @@ public class DropedMan : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
+		gameObject.transform.Translate( 0,  CommonConstant.DROP_VELOCITY * Time.deltaTime, 0 );
+		
 		if( gameObject.transform.position.y <= CommonConstant.BOTTOM_LINE )
 		{
 			Destroy( gameObject );
