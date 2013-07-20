@@ -1,6 +1,6 @@
-﻿//----------------------------------------------
+//----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2012 Tasharen Entertainment
+// Copyright © 2011-2013 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -44,15 +44,30 @@ public class UIButtonColor : MonoBehaviour
 	/// UIButtonColor's default (starting) color. It's useful to be able to change it, just in case.
 	/// </summary>
 
-	public Color defaultColor { get { return mColor; } set { mColor = value; } }
+	public Color defaultColor
+	{
+		get
+		{
+			if (!mStarted) Init();
+			return mColor;
+		}
+		set { mColor = value; }
+	}
 
-	void Start () { Init(); mStarted = true; OnEnable(); }
+	void Start ()
+	{
+		if (!mStarted)
+		{
+			Init();
+			mStarted = true;
+		}
+	}
 
 	protected virtual void OnEnable () { if (mStarted && mHighlighted) OnHover(UICamera.IsHighlighted(gameObject)); }
 
 	void OnDisable ()
 	{
-		if (tweenTarget != null)
+		if (mStarted && tweenTarget != null)
 		{
 			TweenColor tc = tweenTarget.GetComponent<TweenColor>();
 
@@ -96,17 +111,23 @@ public class UIButtonColor : MonoBehaviour
 				}
 			}
 		}
+		OnEnable();
 	}
 
-	protected virtual void OnPress (bool isPressed)
-	{
-		if (enabled) TweenColor.Begin(tweenTarget, duration, isPressed ? pressed : (UICamera.IsHighlighted(gameObject) ? hover : mColor));
-	}
-
-	protected virtual void OnHover (bool isOver)
+	public virtual void OnPress (bool isPressed)
 	{
 		if (enabled)
 		{
+			if (!mStarted) Start();
+			TweenColor.Begin(tweenTarget, duration, isPressed ? pressed : (UICamera.IsHighlighted(gameObject) ? hover : mColor));
+		}
+	}
+
+	public virtual void OnHover (bool isOver)
+	{
+		if (enabled)
+		{
+			if (!mStarted) Start();
 			TweenColor.Begin(tweenTarget, duration, isOver ? hover : mColor);
 			mHighlighted = isOver;
 		}

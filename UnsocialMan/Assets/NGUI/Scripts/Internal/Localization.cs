@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2012 Tasharen Entertainment
+// Copyright © 2011-2013 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -158,11 +158,21 @@ public class Localization : MonoBehaviour
 
 	public string Get (string key)
 	{
+#if UNITY_EDITOR
+		if (!Application.isPlaying) return key;
+#endif
 		string val;
 #if UNITY_IPHONE || UNITY_ANDROID
 		if (mDictionary.TryGetValue(key + " Mobile", out val)) return val;
 #endif
+
+#if UNITY_EDITOR
+		if (mDictionary.TryGetValue(key, out val)) return val;
+		Debug.LogWarning("Localization key not found: '" + key + "'");
+		return key;
+#else
 		return (mDictionary.TryGetValue(key, out val)) ? val : key;
+#endif
 	}
 
 	/// <summary>
