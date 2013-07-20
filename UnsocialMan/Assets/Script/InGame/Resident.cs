@@ -36,16 +36,12 @@ public class Resident : MonoBehaviour
 		m_image = gameObject.GetComponent<tk2dSprite>();
 		m_curImage = m_image.CurrentSprite.name;
 	}
-	
-	// Update is called once per frame
-	void Update () 
-	{
-	}
+
 	
 	// when player start to drag this item
 	void OnMouseDown()
 	{
-		if( m_state != STATE_IDLE )
+		if( m_state != STATE_IDLE || m_judger.STATE != Judger.STATE_CHOOSE )
 		{
 			return;
 		}
@@ -57,6 +53,7 @@ public class Resident : MonoBehaviour
 		m_dragedManObj.transform.Translate( 0, 0, -10.0f );		// put this in front of the window
 		DragedMan man = m_dragedManObj.GetComponent<DragedMan>();
 		man.m_camera = m_camera;
+		man.m_judger = m_judger;
 		man.StartDrag();
 		
 		m_state = STATE_DRAG;
@@ -65,7 +62,7 @@ public class Resident : MonoBehaviour
 	// when player release the mouse button
 	void OnMouseUp()
 	{
-		if( m_state != STATE_DRAG )
+		if( m_state != STATE_DRAG || m_judger.STATE != Judger.STATE_CHOOSE )
 		{
 			return;
 		}
@@ -74,7 +71,6 @@ public class Resident : MonoBehaviour
 		Vector3 windowPos = gameObject.transform.position;
 		mousePos.z = windowPos.z;
 		float distance = ( mousePos - windowPos).magnitude;
-		print( distance );
 		
 		// release the man 
 		if( distance >= CommonConstant.RELEASE_DISTANCE )

@@ -3,11 +3,15 @@ using System.Collections;
 
 public class DropedMan : MonoBehaviour 
 {
+	//---------------- public properties ----------------
+	
+	public Judger m_judger;
+	
+	//---------------- public functions ------------------
 
 	// Use this for initialization
 	void Start () 
 	{
-		//TODO 
 	}
 	
 	// Update is called once per frame
@@ -17,7 +21,10 @@ public class DropedMan : MonoBehaviour
 		
 		if( gameObject.transform.position.y <= CommonConstant.BOTTOM_LINE )
 		{
+			m_judger.EndCurLevel();
+			
 			Destroy( gameObject );
 		}
 	}
+	
 }

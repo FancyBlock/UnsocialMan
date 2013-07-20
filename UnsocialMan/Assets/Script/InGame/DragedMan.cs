@@ -7,6 +7,7 @@ public class DragedMan : MonoBehaviour
 	
 	public Camera m_camera;
 	public GameObject m_dropedMan;
+	public Judger m_judger;
 	
 	
 	//---------------- private members ------------------
@@ -35,8 +36,6 @@ public class DragedMan : MonoBehaviour
 	// start drag
 	public void StartDrag()
 	{
-		//TODO 
-		
 		m_isDraging = true;
 	}
 	
@@ -45,7 +44,8 @@ public class DragedMan : MonoBehaviour
 	{
 		m_isDraging = false;
 		
-		Instantiate( m_dropedMan, gameObject.transform.position, Quaternion.identity );
+		GameObject dropedMan = (GameObject)Instantiate( m_dropedMan, gameObject.transform.position, Quaternion.identity );
+		dropedMan.GetComponent<DropedMan>().m_judger = m_judger;
 		Destroy( gameObject );
 	}
 	
