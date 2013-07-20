@@ -34,6 +34,7 @@ public class Resident : MonoBehaviour
 	void Start () 
 	{
 		m_image = gameObject.GetComponent<tk2dSprite>();
+		m_curImage = m_image.CurrentSprite.name;
 	}
 	
 	// Update is called once per frame
