@@ -136,6 +136,7 @@
      <Compile Include="Assets\Script\InGame\Curtain.cs" />
      <Compile Include="Assets\Script\InGame\DragedMan.cs" />
      <Compile Include="Assets\Script\InGame\DropedMan.cs" />
+     <Compile Include="Assets\Script\InGame\FlyCat.cs" />
      <Compile Include="Assets\Script\InGame\Judger.cs" />
      <Compile Include="Assets\Script\InGame\Resident.cs" />
      <Compile Include="Assets\Script\InGame\Window.cs" />

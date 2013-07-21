@@ -52,7 +52,7 @@ public class Resident : MonoBehaviour
 		
 		// create the dragman
 		m_dragedManObj = (GameObject)Instantiate( m_dragedMan, gameObject.transform.position, Quaternion.identity );
-		m_dragedManObj.transform.Translate( 0, 0, -10.0f );		// put this in front of the window
+		m_dragedManObj.transform.Translate( 0, 0, -11.0f );		// put this in front of the window
 		DragedMan man = m_dragedManObj.GetComponent<DragedMan>();
 		man.m_camera = m_camera;
 		man.m_judger = m_judger;
