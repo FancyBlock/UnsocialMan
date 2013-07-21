@@ -46,6 +46,8 @@ public class Resident : MonoBehaviour
 			return;
 		}
 		
+		m_judger.PlayFlySound();
+		
 		m_image.SetSprite( CommonConstant.SPR_BLANK_WINDOW );
 		
 		// create the dragman

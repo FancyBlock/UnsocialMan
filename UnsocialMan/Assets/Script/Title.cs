@@ -105,6 +105,10 @@ public class Title : MonoBehaviour {
 	
 	void CurtSceneEnd()
 	{
+		GlobalWork.CurrentBuilding = 1;
+		GlobalWork.LastLevelRestTime = 0.0f;
+		GlobalWork.CurrentTimeOut = 5.0f;
+		
 		Application.LoadLevel("InGame");
 	}
 	
