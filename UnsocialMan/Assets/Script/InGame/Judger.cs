@@ -20,6 +20,10 @@ public class Judger : MonoBehaviour
 	public string[] m_hintTexts;
 	public int m_windowCnt;
 	public tk2dSprite m_hintText;
+	public AudioClip m_seRight;
+	public AudioClip m_seWrong;
+	public AudioClip m_seHit;
+	public AudioClip m_seFly;
 	
 	//---------------- private members ------------------
 	
@@ -57,8 +61,10 @@ public class Judger : MonoBehaviour
 		// player turn
 		if( m_state == STATE_CHOOSE )
 		{
-			if( m_time >= CommonConstant.TIMEOUT_TIME )
+			if( m_time >= GlobalWork.CurrentTimeOut )
 			{
+				GlobalWork.LastLevelRestTime = 0.0f;
+				
 				m_state = STATE_WAIT;
 				
 				if( m_curWindow == null )
@@ -80,7 +86,28 @@ public class Judger : MonoBehaviour
 	{		
 		m_resultList.Add( success );
 		
+		if( success )
+		{
+			AudioSource.PlayClipAtPoint( m_seRight, Vector3.zero);
+		}
+		else
+		{
+			AudioSource.PlayClipAtPoint( m_seWrong, Vector3.zero);
+		}
+		
 		m_state = STATE_WAIT;
+	}
+	
+	
+	public void PlayFlySound()
+	{
+		AudioSource.PlayClipAtPoint( m_seFly, Vector3.zero );
+	}
+	
+	
+	public void PlayHitSound()
+	{
+		AudioSource.PlayClipAtPoint( m_seHit, Vector3.zero );
 	}
 	
 	
@@ -107,6 +134,8 @@ public class Judger : MonoBehaviour
 	// callback when droped man hit the ground
 	public void EndCurLevel()
 	{
+		GlobalWork.LastLevelRestTime = GlobalWork.CurrentTimeOut - m_time;
+		
 		// transform to the next level
 		if( m_levelCount < m_totalLevelCount )
 		{
@@ -204,12 +233,22 @@ public class Judger : MonoBehaviour
 		Vector3 newPos;
 		int i;
 		
+		int flashWindowCnt = 0;
+		
 		// create windows
 		foreach( Vector3 pos in m_windowPosOffset )
 		{
 			newPos = pos;
 			newPos.y += 2.0f * ( m_levelCount - 1 );
-			Instantiate( m_mockupWindow, newPos, Quaternion.identity );
+			GameObject window = (GameObject)Instantiate( m_mockupWindow, newPos, Quaternion.identity );
+			window.transform.localScale = m_windowScale;
+			
+			// random flash
+			if( Random.value < 0.2f )
+			{
+				window.GetComponent<Window>().m_isFlash = true;
+				flashWindowCnt++;
+			}
 		}
 		
 		// create residents
@@ -218,6 +257,7 @@ public class Judger : MonoBehaviour
 		for( i = 0; i < m_windowCnt; i++ )
 		{
 			residents[i] = (GameObject)Instantiate( m_mockupResident, Vector3.right * 2, Quaternion.identity );
+			residents[i].transform.localScale = m_windowScale;			//[TEMP]
 			Resident resident = residents[i].GetComponent<Resident>();
 			resident.m_camera = m_camera;
 			resident.m_judger = this;
@@ -265,6 +305,17 @@ public class Judger : MonoBehaviour
 			
 			i++;
 		}
+		
+		// add curtain
+		int curtainCnt = 0;
+		//TODO 
+		
+		GlobalWork.CurrentTimeOut = 2.0f + m_windowCnt * 0.2f + flashWindowCnt * 0.25f + curtainCnt * 0.5f - GlobalWork.LastLevelRestTime * 0.25f;
+		
+		if( GlobalWork.CurrentTimeOut < 3.0f )
+		{
+			GlobalWork.CurrentTimeOut = 3.0f;
+		}
 	}
 	
 	
@@ -284,7 +335,20 @@ public class Judger : MonoBehaviour
 		if( correctCnt >= CommonConstant.WIN_MAN_CNT )
 		{
 			// win
-			Application.LoadLevel( "Win" );
+			if( GlobalWork.CurrentBuilding == 1 )
+			{
+				GlobalWork.CurrentBuilding++;
+				Application.LoadLevel( "InGameLv2" );
+			}
+			else if( GlobalWork.CurrentBuilding == 2 )
+			{
+				GlobalWork.CurrentBuilding++;
+				Application.LoadLevel( "InGameLv3" );
+			}
+			else
+			{
+				Application.LoadLevel( "Win" );
+			}
 		}
 		else
 		{
@@ -315,8 +379,8 @@ public class Judger : MonoBehaviour
 		}
 		
 		// save the scale
-		m_windowScale = residents[0].transform.localScale;
-		//TODO 
+		m_windowScale = windows[0].transform.localScale;
+		m_residentScale = residents[0].transform.localScale;
 	}
 	
 }

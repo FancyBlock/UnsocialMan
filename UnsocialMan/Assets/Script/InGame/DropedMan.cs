@@ -18,7 +18,17 @@ public class DropedMan : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		gameObject.transform.Translate( 0,  CommonConstant.DROP_VELOCITY * Time.deltaTime, 0 );
+		float xOffset = 0.0f;
+		if( gameObject.transform.position.x > 0.75f )
+		{
+			xOffset = CommonConstant.DROP_VELOCITY * Time.deltaTime * 1.2f;
+		}
+		else if( gameObject.transform.position.x < -0.75f )
+		{
+			xOffset = -CommonConstant.DROP_VELOCITY * Time.deltaTime * 1.2f;
+		}
+			
+		gameObject.transform.Translate( xOffset,  CommonConstant.DROP_VELOCITY * Time.deltaTime, 0 );
 		
 		float bottomLine = CommonConstant.BOTTOM_LINE + ( m_judger.CUR_LEVEL_CNT - 1.0f ) * 2.0f;
 		if( gameObject.transform.position.y <=  bottomLine  )
@@ -32,6 +42,8 @@ public class DropedMan : MonoBehaviour
 	// kill the man
 	void OnMouseDown()
 	{
+		m_judger.PlayHitSound();
+		
 		// kill the drop man
 		GameObject blood = (GameObject)Instantiate( m_bloodMockup, gameObject.transform.position, Quaternion.identity );
 		blood.GetComponent<Blood>().m_judger = m_judger;

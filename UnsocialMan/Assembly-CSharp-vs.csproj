@@ -130,12 +130,14 @@
      <Compile Include="Assets\NGUI\Scripts\UI\UITiledSprite.cs" />
      <Compile Include="Assets\NGUI\Scripts\UI\UITooltip.cs" />
      <Compile Include="Assets\NGUI\Scripts\UI\UIViewport.cs" />
+     <Compile Include="Assets\Script\GlobalWork.cs" />
      <Compile Include="Assets\Script\InGame\Blood.cs" />
      <Compile Include="Assets\Script\InGame\CommonConstant.cs" />
      <Compile Include="Assets\Script\InGame\DragedMan.cs" />
      <Compile Include="Assets\Script\InGame\DropedMan.cs" />
      <Compile Include="Assets\Script\InGame\Judger.cs" />
      <Compile Include="Assets\Script\InGame\Resident.cs" />
+     <Compile Include="Assets\Script\InGame\Window.cs" />
      <Compile Include="Assets\Script\Lose.cs" />
      <Compile Include="Assets\Script\Title.cs" />
      <Compile Include="Assets\Script\UI\InGameProgressBar.cs" />

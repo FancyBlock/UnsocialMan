@@ -19,7 +19,7 @@ public class InGameProgressBar : MonoBehaviour
 	{
 		if( m_judger != null )
 		{
-			m_slider.sliderValue = ( CommonConstant.TIMEOUT_TIME - m_judger.TIME ) / CommonConstant.TIMEOUT_TIME;
+			m_slider.sliderValue = ( GlobalWork.CurrentTimeOut - m_judger.TIME ) / GlobalWork.CurrentTimeOut;
 		}
 	}
 }
