@@ -25,6 +25,7 @@ public class Judger : MonoBehaviour
 	public AudioClip m_seWrong;
 	public AudioClip m_seHit;
 	public AudioClip m_seFly;
+	public AudioClip m_seOpenWindow;
 	
 	//---------------- private members ------------------
 	
@@ -71,6 +72,7 @@ public class Judger : MonoBehaviour
 				
 				if( m_curWindow == null )
 				{
+					m_resultList.Add( false );
 					StartCoroutine( "chooseTimeout" );
 				}
 				else
@@ -110,6 +112,12 @@ public class Judger : MonoBehaviour
 	public void PlayHitSound()
 	{
 		AudioSource.PlayClipAtPoint( m_seHit, Vector3.zero );
+	}
+	
+	
+	public void PlayOpenWindowSound()
+	{
+		AudioSource.PlayClipAtPoint( m_seOpenWindow, Vector3.zero );
 	}
 	
 	
@@ -266,6 +274,7 @@ public class Judger : MonoBehaviour
 			if( Random.value < 0.2f )
 			{
 				GameObject curtain = (GameObject)Instantiate( m_mockupCurtain, newPos, Quaternion.identity );
+				curtain.GetComponent<Curtain>().m_judger = this;
 				curtain.transform.localScale = m_windowScale;
 				newPos.z = 100;
 				newPos.y += ( 0.01801158f * Mathf.Abs( m_windowScale.x ) );

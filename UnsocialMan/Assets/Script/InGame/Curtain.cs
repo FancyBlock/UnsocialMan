@@ -3,6 +3,8 @@ using System.Collections;
 
 public class Curtain : MonoBehaviour 
 {
+	public Judger m_judger;
+	
 	protected tk2dAnimatedSprite m_anim;
 	protected bool m_isOpen;
 
@@ -32,6 +34,7 @@ public class Curtain : MonoBehaviour
 	{
 		if( m_isOpen == false )
 		{
+			m_judger.PlayOpenWindowSound();
 			m_anim.Play();
 			m_isOpen = true;
 		}
