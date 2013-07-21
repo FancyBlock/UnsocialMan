@@ -111,4 +111,22 @@ public class Title : MonoBehaviour {
 		
 		Application.LoadLevel("InGame");
 	}
+	
+	void ClickSkip()
+	{
+		AudioSource.PlayClipAtPoint(ClickSound, Vector3.zero);
+		
+		CancelInvoke("CurtScene0");
+		CancelInvoke("CurtScene1");
+		CancelInvoke("CurtScene2");
+		CancelInvoke("CurtScene3");
+		CancelInvoke("CurtScene4");
+		CancelInvoke("CurtScene5");
+		CancelInvoke("CurtScene6");
+		CancelInvoke("CurtScene7");
+		CancelInvoke("CurtSceneEnd");
+		
+		CurtScene7();
+		Invoke("CurtSceneEnd", 3.0f);
+	}
 }
