@@ -133,6 +133,7 @@
      <Compile Include="Assets\Script\GlobalWork.cs" />
      <Compile Include="Assets\Script\InGame\Blood.cs" />
      <Compile Include="Assets\Script\InGame\CommonConstant.cs" />
+     <Compile Include="Assets\Script\InGame\Curtain.cs" />
      <Compile Include="Assets\Script\InGame\DragedMan.cs" />
      <Compile Include="Assets\Script\InGame\DropedMan.cs" />
      <Compile Include="Assets\Script\InGame\Judger.cs" />
@@ -140,6 +141,7 @@
      <Compile Include="Assets\Script\InGame\Window.cs" />
      <Compile Include="Assets\Script\Lose.cs" />
      <Compile Include="Assets\Script\Title.cs" />
+     <Compile Include="Assets\Script\UI\FiveProgressBar.cs" />
      <Compile Include="Assets\Script\UI\InGameProgressBar.cs" />
      <Compile Include="Assets\Script\Win.cs" />
      <Compile Include="Assets\Script\iTween.cs" />

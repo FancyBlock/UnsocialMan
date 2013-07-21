@@ -16,6 +16,7 @@ public class Judger : MonoBehaviour
 	public GameObject m_curWindow;
 	public GameObject m_mockupResident;
 	public GameObject m_mockupWindow;
+	public GameObject m_mockupCurtain;
 	public string[] m_levelPrefix;
 	public string[] m_hintTexts;
 	public int m_windowCnt;
@@ -51,6 +52,7 @@ public class Judger : MonoBehaviour
 		getWindowAndResidentOffset();
 		
 		m_levelCount = 1;
+		createNextLevel();
 		
 		startChoose();
 	}
@@ -131,6 +133,13 @@ public class Judger : MonoBehaviour
 	}
 	
 	
+	// return the result list
+	public ArrayList GetResultList()
+	{
+		return m_resultList;
+	}
+	
+	
 	// callback when droped man hit the ground
 	public void EndCurLevel()
 	{
@@ -189,6 +198,8 @@ public class Judger : MonoBehaviour
 	// add a 'X' to the correct window
 	protected void addWrongMark()
 	{
+		AudioSource.PlayClipAtPoint( m_seWrong, Vector3.zero);
+		
 		Vector3 cornor1 = m_camera.ScreenToWorldPoint( Vector3.zero );
 		Vector3 cornor2 = m_camera.ScreenToWorldPoint( new Vector3( Screen.width, Screen.height, 0.0f ) );
 		
@@ -234,6 +245,7 @@ public class Judger : MonoBehaviour
 		int i;
 		
 		int flashWindowCnt = 0;
+		int curtainCnt = 0;				// add curtain
 		
 		// create windows
 		foreach( Vector3 pos in m_windowPosOffset )
@@ -248,6 +260,17 @@ public class Judger : MonoBehaviour
 			{
 				window.GetComponent<Window>().m_isFlash = true;
 				flashWindowCnt++;
+			}
+			
+			// random curtain
+			if( Random.value < 0.2f )
+			{
+				GameObject curtain = (GameObject)Instantiate( m_mockupCurtain, newPos, Quaternion.identity );
+				curtain.transform.localScale = m_windowScale;
+				newPos.z = 100;
+				newPos.y += ( 0.01801158f * Mathf.Abs( m_windowScale.x ) );
+				curtain.transform.position = newPos;
+				curtainCnt++;
 			}
 		}
 		
@@ -305,10 +328,6 @@ public class Judger : MonoBehaviour
 			
 			i++;
 		}
-		
-		// add curtain
-		int curtainCnt = 0;
-		//TODO 
 		
 		GlobalWork.CurrentTimeOut = 2.0f + m_windowCnt * 0.2f + flashWindowCnt * 0.25f + curtainCnt * 0.5f - GlobalWork.LastLevelRestTime * 0.25f;
 		
@@ -381,6 +400,17 @@ public class Judger : MonoBehaviour
 		// save the scale
 		m_windowScale = windows[0].transform.localScale;
 		m_residentScale = residents[0].transform.localScale;
+		
+		// destory all the gameobject
+		foreach( GameObject resident in residents )
+		{
+			Destroy( resident );
+		}
+		foreach( GameObject window in windows )
+		{
+			Destroy( window );
+		}
+		
 	}
 	
 }
