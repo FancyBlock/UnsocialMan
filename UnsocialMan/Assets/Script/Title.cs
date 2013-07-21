@@ -127,6 +127,6 @@ public class Title : MonoBehaviour {
 		CancelInvoke("CurtSceneEnd");
 		
 		CurtScene7();
-		Invoke("CurtSceneEnd", 3.0f);
+		Invoke("CurtSceneEnd", 2.0f);
 	}
 }
