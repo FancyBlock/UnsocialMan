@@ -227,7 +227,9 @@ public class Judger : MonoBehaviour
 					obj.transform.position.y < top &&
 					obj.transform.position.y > bottom )
 				{
-					Instantiate( m_wrongMark, obj.transform.position, Quaternion.identity );
+					Vector3 newPos = obj.transform.position;
+					newPos.z = 90.0f;
+					Instantiate( m_wrongMark, newPos, Quaternion.identity );
 				}
 			}
 		}
